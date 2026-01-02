@@ -68,8 +68,8 @@ public static class EventHandler
     {
         Stopwatch.Restart();
         if (Mvp.Singleton.Config == null) return;
-        foreach (var config in Mvp.Singleton.Config.MvpMusic.Where(config => File.Exists(Path.Combine(Path.Combine(PathManager.Configs.FullName, "Mvp"), config.Value))))
-            AudioClipStorage.LoadClip(Path.Combine(Path.Combine(PathManager.Configs.FullName, "Mvp"), config.Value),
+        foreach (var config in Mvp.Singleton.Config.MvpMusic.Where(config => File.Exists(Path.Combine(Path.Combine(PathManager.Configs.FullName, "MvpMusic"), config.Value))))
+            AudioClipStorage.LoadClip(Path.Combine(Path.Combine(PathManager.Configs.FullName, "MvpMusic"), config.Value),
                 config.Key + "-" + config.Value);
     }
 
@@ -187,11 +187,14 @@ public static class EventHandler
                 .FirstOrDefault()?.Key;
             if (mvp != null)
             {
-                var mvpPlayer = Player.Get(mvp.UserId);
-                if (mvpPlayer != null) 
-                    StatsSystem.TryIncrementMVPs(mvpPlayer);
+                if (Mvp.Singleton.Config.StatsSystemIntegration)
+                {
+                    var mvpPlayer = Player.Get(mvp.UserId);
+                    if (mvpPlayer != null)
+                        StatsSystem.TryIncrementMVPs(mvpPlayer);
+                }
                 
-                var mvpText = $"<color=#78e2ff><b>{mvp.Name}</b></color> lett az MVP!";
+                var mvpText = Mvp.Singleton.Config.MvpTitle.Replace("{name}", mvp.Name);
                 if (mvp != null && Mvp.Singleton.Config.MvpMusic.ContainsKey(mvp.UserId) &&
                     Mvp.Singleton.Config.MvpMusic[mvp.UserId] != null)
                 {

@@ -19,16 +19,16 @@ public class Mvp : Plugin<Config>
     public override Version Version { get; } = new(1, 0, 0);
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
     internal static Mvp Singleton { get; private set; }
-    public string githubRepo = "MedveMarci/StatsSystem";
+    public string githubRepo = "MedveMarci/MvpSystem";
 
     public override void Enable()
     {
         Singleton = this;
         _harmony.PatchAll();
-        if (!Directory.Exists(Path.Combine(PathManager.Configs.FullName, "Mvp")))
+        if (!Directory.Exists(Path.Combine(PathManager.Configs.FullName, "MvpMusic")))
         {
             LogManager.Info("Mvp directory does not exist. Creating...");
-            Directory.CreateDirectory(Path.Combine(PathManager.Configs.FullName, "Mvp"));
+            Directory.CreateDirectory(Path.Combine(PathManager.Configs.FullName, "MvpMusic"));
         }
 
         ServerSpecificSettingBase[] setting =
