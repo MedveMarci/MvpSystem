@@ -14,6 +14,11 @@ An SCP: Secret Laboratory LabApi plugin which shows some statistics about the ro
 - Compatible with [StatsSystem](https://github.com/MedveMarci/StatsSystem/releases/latest).
   - If the StatsSystemIntegration is true in the config and the plugin is present, it will count the MVPs.
 
+# Installation
+- Download `MvpSystem.dll` and `dependencies.zip`.
+- Move `MvpSystem.dll` to => /SCP Secret Laboratory/LabApi/plugins/global/
+- Move `dependencies.zip` to => /SCP Secret Laboratory/LabApi/dependencies/global/
+
 # For Support
 <div align="left">
 <a href='https://discord.gg/KmpA8cfaSA'><img src='https://www.allkpop.com/upload/2021/01/content/262046/1611711962-discord-button.png' height="100"></a>
