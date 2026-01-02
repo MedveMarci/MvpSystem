@@ -5,7 +5,7 @@ using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
 using Mirror;
 
-namespace Mvp.Patches;
+namespace MvpSystem.Patches;
 
 [HarmonyPatch(typeof(AchievementHandlerBase), nameof(AchievementHandlerBase.ServerAchieve))]
 public class AchievementHandlerBasePatch

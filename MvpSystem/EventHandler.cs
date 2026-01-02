@@ -14,7 +14,7 @@ using PlayerRoles;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 
-namespace Mvp;
+namespace MvpSystem;
 
 public static class EventHandler
 {

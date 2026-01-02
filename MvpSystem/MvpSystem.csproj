@@ -8,8 +8,8 @@
         <ProjectGuid>{6377BCFC-56B9-455E-9826-100A8EE440E8}</ProjectGuid>
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Mvp</RootNamespace>
-        <AssemblyName>Mvp</AssemblyName>
+        <RootNamespace>MvpSystem</RootNamespace>
+        <AssemblyName>MvpSystem</AssemblyName>
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>latest</LangVersion>

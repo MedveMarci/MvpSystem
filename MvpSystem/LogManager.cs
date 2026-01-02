@@ -1,7 +1,7 @@
 ﻿using System;
 using LabApi.Features.Console;
 
-namespace Mvp;
+namespace MvpSystem;
 
 internal abstract class LogManager
 {

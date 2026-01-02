@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mvp", "Mvp\Mvp.csproj", "{6377BCFC-56B9-455E-9826-100A8EE440E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvpSystem", "MvpSystem\MvpSystem.csproj", "{6377BCFC-56B9-455E-9826-100A8EE440E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

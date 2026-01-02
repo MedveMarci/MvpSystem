@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using Achievements;
 
-namespace Mvp;
+namespace MvpSystem;
 
 public class Config
 {

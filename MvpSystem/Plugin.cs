@@ -8,7 +8,7 @@ using LabApi.Loader.Features.Paths;
 using LabApi.Loader.Features.Plugins;
 using UserSettings.ServerSpecific;
 
-namespace Mvp;
+namespace MvpSystem;
 
 public class Mvp : Plugin<Config>
 {
@@ -27,7 +27,7 @@ public class Mvp : Plugin<Config>
         _harmony.PatchAll();
         if (!Directory.Exists(Path.Combine(PathManager.Configs.FullName, "MvpMusic")))
         {
-            LogManager.Info("Mvp directory does not exist. Creating...");
+            LogManager.Info("MvpMusic directory does not exist. Creating...");
             Directory.CreateDirectory(Path.Combine(PathManager.Configs.FullName, "MvpMusic"));
         }
 

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace Mvp;
+namespace MvpSystem;
 
 internal static class StatsSystem
 {
