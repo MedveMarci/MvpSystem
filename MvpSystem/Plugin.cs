@@ -16,7 +16,7 @@ public class Mvp : Plugin<Config>
     public override string Name => "MvpSystem";
     public override string Description => "A plugin to track and reward MVP players each round.";
     public override string Author => "MedveMarci";
-    public override Version Version { get; } = new(1, 0, 0);
+    public override Version Version { get; } = new(1, 1, 0);
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
     internal static Mvp Singleton { get; private set; }
     public string githubRepo = "MedveMarci/MvpSystem";
@@ -58,6 +58,7 @@ public class Mvp : Plugin<Config>
         PlayerEvents.Escaping += EventHandler.OnPlayerEscaping;
         ServerEvents.RoundEnded += EventHandler.OnRoundEnded;
         ServerEvents.RoundRestarted += EventHandler.OnRoundRestarted;
+        PlayerEvents.Hurt += EventHandler.OnPlayerHurt;
     }
 
     public override void Disable()
@@ -72,5 +73,6 @@ public class Mvp : Plugin<Config>
         PlayerEvents.Escaping -= EventHandler.OnPlayerEscaping;
         ServerEvents.RoundEnded -= EventHandler.OnRoundEnded;
         ServerEvents.RoundRestarted -= EventHandler.OnRoundRestarted;
+        PlayerEvents.Hurt -= EventHandler.OnPlayerHurt;
     }
 }
