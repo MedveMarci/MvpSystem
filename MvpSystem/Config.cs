@@ -12,7 +12,8 @@ public class Config
     [Description("MVP music to be played with steamid as key and music file name as value, make sure the files are in Mvp/Music folder")]
     public Dictionary<string, string> MvpMusic { get; set; } = new()
     {
-        { "steamid", "name.ogg" }
+        { "steamid", "name.ogg" },
+        { "steamid2", "name.ogg" }
     };
 
     [Description("If the StatsSystem plugin is present, it will count it if this is true")]
@@ -47,6 +48,9 @@ public class Config
 
     public string BestAchievement { get; set; } =
         "<color=#78e2ff><b>{name}</b></color> achieved <color=#45ff7a><b>{achievement}</b></color> - {description}";
+    
+    public string MostDamageDealt { get; set; } = 
+        "<color=#78e2ff><b>{name}</b></color> dealt the most damage with <color=#45ff7a><b>{damage}</b></color> damage";
 
     [Description("Close out tags from the Start and display text you want to appear at the bottom")]
     public string End { get; set; } = "</line-height></size>";

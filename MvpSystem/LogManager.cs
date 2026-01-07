@@ -5,7 +5,7 @@ namespace MvpSystem;
 
 internal abstract class LogManager
 {
-    private static bool DebugEnabled => Mvp.Singleton?.Config?.Debug == true;
+    private static bool DebugEnabled => Mvp.Singleton.Config?.Debug ?? false;
 
     public static void Debug(string message)
     {
