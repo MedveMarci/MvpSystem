@@ -6,10 +6,10 @@ namespace MvpSystem;
 
 public class Config
 {
-    [Description("Enable debug logs")]
-    public bool Debug { get; set; } = false;
-    
-    [Description("MVP music to be played with steamid as key and music file name as value, make sure the files are in Mvp/Music folder")]
+    [Description("Enable debug logs")] public bool Debug { get; set; } = false;
+
+    [Description(
+        "MVP music to be played with steamid as key and music file name as value, make sure the files are in Mvp/Music folder")]
     public Dictionary<string, string> MvpMusic { get; set; } = new()
     {
         { "steamid", "name.ogg" },
@@ -18,15 +18,15 @@ public class Config
 
     [Description("If the StatsSystem plugin is present, it will count it if this is true")]
     public bool StatsSystemIntegration { get; set; } = true;
-    
+
     [Description("Duration of broadcast, might need to be increased if round end time set in config is longer")]
     public ushort Duration { get; set; } = 30;
 
     [Description("Set text format shared between stats with tags and display text you want to appear at the top")]
     public string Start { get; set; } = "<size=31><line-height=0.9em>";
-    
+
     [Description("Format used for MVP title")]
-    public string MvpTitle { get; set; } =  "<color=#78e2ff><b>{name}</b></color> is the MVP!";
+    public string MvpTitle { get; set; } = "<color=#78e2ff><b>{name}</b></color> is the MVP!";
 
     [Description("Format used for each stat, if set to no text/empty the stat will not be displayed")]
     public string MostKillsAsScp { get; set; } =
@@ -48,8 +48,8 @@ public class Config
 
     public string BestAchievement { get; set; } =
         "<color=#78e2ff><b>{name}</b></color> achieved <color=#45ff7a><b>{achievement}</b></color> - {description}";
-    
-    public string MostDamageDealt { get; set; } = 
+
+    public string MostDamageDealt { get; set; } =
         "<color=#78e2ff><b>{name}</b></color> dealt the most damage with <color=#45ff7a><b>{damage}</b></color> damage";
 
     [Description("Close out tags from the Start and display text you want to appear at the bottom")]

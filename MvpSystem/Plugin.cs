@@ -6,20 +6,21 @@ using LabApi.Events.Handlers;
 using LabApi.Features;
 using LabApi.Loader.Features.Paths;
 using LabApi.Loader.Features.Plugins;
+using MvpSystem.ApiFeatures;
 using UserSettings.ServerSpecific;
 
 namespace MvpSystem;
 
-public class Mvp : Plugin<Config>
+public class MvpSystem : Plugin<Config>
 {
     private readonly Harmony _harmony = new("MedveMarci.MVP");
+    public string githubRepo = "MedveMarci/MvpSystem";
     public override string Name => "MvpSystem";
     public override string Description => "A plugin to track and reward MVP players each round.";
     public override string Author => "MedveMarci";
-    public override Version Version { get; } = new(1, 1, 0);
+    public override Version Version { get; } = new(1, 1, 1);
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
-    internal static Mvp Singleton { get; private set; }
-    public string githubRepo = "MedveMarci/MvpSystem";
+    internal static MvpSystem Singleton { get; private set; }
 
     public override void Enable()
     {
@@ -34,7 +35,7 @@ public class Mvp : Plugin<Config>
         ServerSpecificSettingBase[] setting =
         [
             new SSGroupHeader("MvpMusic"),
-            new SSTwoButtonsSetting(300, "MVP Music", "On", "Off", false, "You can enable or disable MVP music sound."),
+            new SSTwoButtonsSetting(300, "MVP Music", "On", "Off", false, "You can enable or disable MVP music sound.")
         ];
 
         if (ServerSpecificSettingsSync.DefinedSettings == null ||
