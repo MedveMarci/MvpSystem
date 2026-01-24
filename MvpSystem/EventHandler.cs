@@ -13,6 +13,7 @@ using Mirror;
 using MvpSystem.ApiFeatures;
 using PlayerRoles;
 using PlayerStatsSystem;
+using StatsSystem.Extensions;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 
@@ -214,7 +215,15 @@ public static class EventHandler
                     {
                         LogManager.Debug(
                             $"Incrementing MVP count for player {mvp.Name} ({mvp.UserId}) via StatsSystem");
-                        StatsSystem.TryIncrementMVPs(mvpPlayer);
+                        if (LabApi.Loader.PluginLoader.EnabledPlugins.Any(plugin => plugin.Name == "StatsSystem"))
+                        {
+                            IncrementStat(mvpPlayer);
+                            LogManager.Debug("MVP count incremented successfully.");
+                        }
+                        else
+                            LogManager.Warn(
+                                "StatsSystem plugin not found in enabled plugins. Cannot increment MVP count.");
+                        
                     }
                     else
                     {
@@ -385,6 +394,11 @@ public static class EventHandler
                                                        .Value) >
                                                    MvpSystem.Singleton.Config.Achievements.IndexOf(achievement)))
             stats.Achievement = achievement;
+    }
+
+    private static void IncrementStat(Player player)
+    {
+        player.IncrementStat("MVPs");
     }
 
     private class Stats(Player player)
