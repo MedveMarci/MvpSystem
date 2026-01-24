@@ -38,6 +38,7 @@
         <Reference Include="Assembly-CSharp" HintPath="$(sl_references)\Assembly-CSharp-Publicized.dll"/>
         <Reference Include="Assembly-CSharp-firstpass" HintPath="$(sl_references)\Assembly-CSharp-firstpass.dll"/>
         <Reference Include="AudioPlayerApi" HintPath="$(labapi_dependencies)\AudioPlayerApi.dll"/>
+        <Reference Include="StatsSystem" HintPath="$(labapi_plugins)\StatsSystem.dll"/>
         <Reference Include="CommandSystem.Core" HintPath="$(sl_references)\CommandSystem.Core.dll"/>
         <Reference Include="LabApi" HintPath="$(sl_references)\LabApi.dll"/>
         <Reference Include="Mirror" HintPath="$(sl_references)\Mirror.dll"/>
@@ -58,7 +59,6 @@
         <Compile Include="Plugin.cs"/>
         <Compile Include="Patches\AchievementHandlerBasePatch.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="StatsSystem.cs"/>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Lib.Harmony" Version="2.4.2"/>
