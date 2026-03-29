@@ -37,7 +37,7 @@
     <ItemGroup>
         <Reference Include="Assembly-CSharp" HintPath="$(sl_references)\Assembly-CSharp-Publicized.dll"/>
         <Reference Include="Assembly-CSharp-firstpass" HintPath="$(sl_references)\Assembly-CSharp-firstpass.dll"/>
-        <Reference Include="AudioPlayerApi" HintPath="$(labapi_dependencies)\AudioPlayerApi.dll"/>
+        <Reference Include="SecretLabNAudio.Core" HintPath="$(labapi_plugins)\SecretLabNAudio.Core.dll"/>
         <Reference Include="StatsSystem" HintPath="$(labapi_plugins)\StatsSystem.dll"/>
         <Reference Include="CommandSystem.Core" HintPath="$(sl_references)\CommandSystem.Core.dll"/>
         <Reference Include="LabApi" HintPath="$(sl_references)\LabApi.dll"/>
@@ -63,7 +63,7 @@
     <ItemGroup>
         <PackageReference Include="Lib.Harmony" Version="2.4.2"/>
         <PackageReference Include="System.Net.Http" Version="4.3.4"/>
-        <PackageReference Include="System.Text.Json" Version="10.0.2"/>
+        <PackageReference Include="System.Text.Json" Version="10.0.3"/>
         <PackageReference Include="YamlDotNet" Version="11.0.1"/>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>

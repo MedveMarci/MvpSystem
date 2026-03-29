@@ -8,11 +8,15 @@ using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Features.Wrappers;
+using LabApi.Loader;
 using LabApi.Loader.Features.Paths;
 using Mirror;
 using MvpSystem.ApiFeatures;
 using PlayerRoles;
 using PlayerStatsSystem;
+using SecretLabNAudio.Core;
+using SecretLabNAudio.Core.Extensions;
+using SecretLabNAudio.Core.Pools;
 using StatsSystem.Extensions;
 using UnityEngine;
 using UserSettings.ServerSpecific;
@@ -24,8 +28,8 @@ public static class EventHandler
     private static readonly Dictionary<Stat, Stats> PreviousStats = new();
     private static readonly Dictionary<int, Stats> PlayerStats = new();
     private static readonly Stopwatch Stopwatch = new();
-
-
+    private static readonly Dictionary<string, string> ClipPaths = new();
+    
     internal static void OnPlayerJoined(PlayerJoinedEventArgs ev)
     {
         if (PlayerStats.ContainsKey(ev.Player.PlayerId))
@@ -47,19 +51,18 @@ public static class EventHandler
     {
         Stopwatch.Restart();
         if (MvpSystem.Singleton.Config == null) return;
-        foreach (var config in MvpSystem.Singleton.Config.MvpMusic.Where(config =>
-                     File.Exists(Path.Combine(Path.Combine(PathManager.Configs.FullName, "MvpMusic"), config.Value))))
-            AudioClipStorage.LoadClip(
-                Path.Combine(Path.Combine(PathManager.Configs.FullName, "MvpMusic"), config.Value),
-                config.Key + "-" + config.Value);
+        var musicDir = Path.Combine(PathManager.Configs.FullName, "MvpMusic");
+        foreach (var config in MvpSystem.Singleton.Config.MvpMusic)
+        {
+            var filePath = Path.Combine(musicDir, config.Value);
+            if (File.Exists(filePath))
+                ClipPaths[config.Key + "-" + config.Value] = filePath;
+        }
     }
 
     internal static void OnRoundRestarted()
     {
-        if (MvpSystem.Singleton.Config == null) return;
-        foreach (var config in MvpSystem.Singleton.Config.MvpMusic.Where(config =>
-                     AudioClipStorage.AudioClips.ContainsKey(config.Key + "-" + config.Value)))
-            AudioClipStorage.DestroyClip(config.Key + "-" + config.Value);
+        ClipPaths.Clear();
     }
 
     internal static void OnPlayerHurt(PlayerHurtEventArgs ev)
@@ -72,6 +75,7 @@ public static class EventHandler
 
     internal static void OnPlayerDying(PlayerDyingEventArgs ev)
     {
+        if (ev.Player.IsDummy) return;
         if (ev.Player.HasEffect<PocketCorroding>())
         {
             Player scp106 = null;
@@ -87,21 +91,20 @@ public static class EventHandler
             }
         }
 
-        if (ev.Attacker == null) return;
+        if (ev.Attacker == null || ev.Attacker.IsDummy) return;
+        
+        var playerStat = PlayerStats[ev.Attacker.PlayerId];
+        if (ev.Player.Team == Team.SCPs && ev.Player.Role != RoleTypeId.Scp0492)
         {
-            var stats = PlayerStats[ev.Attacker.PlayerId];
-            if (ev.Player.Team == Team.SCPs && ev.Player.Role != RoleTypeId.Scp0492)
-            {
-                stats.ScpsKilled.Add(ev.Player.Role);
+                playerStat.ScpsKilled.Add(ev.Player.Role);
 
-                if (stats.ScpKilledTime < 0)
-                    stats.ScpKilledTime = (float)NetworkTime.time;
-            }
-
-            if (ev.Attacker.Team != Team.SCPs &&
-                ev.Attacker.Faction != ev.Player.Faction)
-                stats.TotalKills++;
+                if (playerStat.ScpKilledTime < 0)
+                    playerStat.ScpKilledTime = (float)NetworkTime.time;
         }
+
+        if (ev.Attacker.Team != Team.SCPs &&
+            ev.Attacker.Faction != ev.Player.Faction)
+            playerStat.TotalKills++;
     }
 
     internal static void OnPlayerDeath(PlayerDeathEventArgs ev)
@@ -196,7 +199,7 @@ public static class EventHandler
             var bc = MvpSystem.Singleton.Config.Start;
             var mvp = new[]
                 {
-                    topTotalKills, topScpsKilled, topKillsAsScp, topTotalDamageDealt, topEscapeTime, topAchievement,
+                    topScpsKilled, topTotalKills, topKillsAsScp, topTotalDamageDealt, topEscapeTime, topAchievement,
                     topScpKilledTime
                 }
                 .Where(s => s != null)
@@ -215,15 +218,16 @@ public static class EventHandler
                     {
                         LogManager.Debug(
                             $"Incrementing MVP count for player {mvp.Name} ({mvp.UserId}) via StatsSystem");
-                        if (LabApi.Loader.PluginLoader.EnabledPlugins.Any(plugin => plugin.Name == "StatsSystem"))
+                        if (PluginLoader.EnabledPlugins.Any(plugin => plugin.Name == "StatsSystem"))
                         {
                             IncrementStat(mvpPlayer);
                             LogManager.Debug("MVP count incremented successfully.");
                         }
                         else
+                        {
                             LogManager.Warn(
                                 "StatsSystem plugin not found in enabled plugins. Cannot increment MVP count.");
-                        
+                        }
                     }
                     else
                     {
@@ -232,24 +236,23 @@ public static class EventHandler
                 }
 
                 var mvpText = MvpSystem.Singleton.Config.MvpTitle.Replace("{name}", mvp.Name);
-                if (mvp != null && MvpSystem.Singleton.Config.MvpMusic.ContainsKey(mvp.UserId) &&
-                    MvpSystem.Singleton.Config.MvpMusic[mvp.UserId] != null)
+                var clipKey = mvp.UserId + "-" + (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out var value) ? value : null);
+                if (MvpSystem.Singleton.Config.MvpMusic.ContainsKey(mvp.UserId) &&
+                    ClipPaths.TryGetValue(clipKey, out var clipPath))
                 {
                     LogManager.Debug(
                         $"MVP has configured music: {MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]} for user {mvp.UserId}");
-                    var audioPlayer = AudioPlayer.CreateOrGet("MvpPlayer",
-                        condition: hub =>
-                            ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(hub, 300).SyncIsA,
-                        onIntialCreation: p => { p.AddSpeaker("MvpSpeaker", isSpatial: false, maxDistance: 5000f); });
 
-                    LogManager.Debug("AudioPlayer obtained/created for MVP audio");
+                    var settings = new SpeakerSettings { IsSpatial = false, MaxDistance = 5000f, Volume = 1f };
+                    AudioPlayerPool.Rent(settings)
+                        .WithFilteredSendEngine(p =>
+                            ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(p.ReferenceHub, 300)
+                                ?.SyncIsA ?? false)
+                        .UseFile(clipPath, false)
+                        .DestroyOnEnd()
+                        .PoolOnEnd();
 
-                    audioPlayer.AddClip(mvp.UserId + "-" + MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]);
-                    LogManager.Debug(
-                        $"Added audio clip: {mvp.UserId}-{MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]}");
-
-                    audioPlayer.DestroyWhenAllClipsPlayed = true;
-                    LogManager.Debug("AudioPlayer configured to destroy when clips played");
+                    LogManager.Debug($"Playing MVP audio: {clipKey}");
                     mvpText +=
                         $"\nZene neve: <b>{MvpSystem.Singleton.Config.MvpMusic[mvp.UserId].Replace(".ogg", "")}</b>";
                 }
