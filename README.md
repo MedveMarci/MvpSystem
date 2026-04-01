@@ -5,9 +5,9 @@ An SCP: Secret Laboratory LabApi plugin which shows some statistics about the ro
 # Features
 
 - Fully customizable in the config.
-- You can add MVP music for specific players. If they are the MVP the music will be played.
+- You can add MVP music for specific players using [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio). If they are the MVP the music will be played.
   - You need:
-  -  Format .ogg
+  -  Format .ogg or .mp3
   -  Channels: 1 ( MONO )
   -  Freq: 48Khz
 - Option for muting the music. So you will not hear it. (Server-Specific Setting)
@@ -15,6 +15,8 @@ An SCP: Secret Laboratory LabApi plugin which shows some statistics about the ro
   - If the StatsSystemIntegration is true in the config and the plugin is present, it will count the MVPs.
 
 # Installation
+- Install [SecretLabNAudio-v2.0.0-beta2](https://github.com/Axwabo/SecretLabNAudio/releases/tag/v2.0.0-beta2).
+  - For installation check this [README.md](https://github.com/Axwabo/SecretLabNAudio/blob/ffmpeg/README.md).
 - Download `MvpSystem.dll` and `dependencies.zip`.
 - Move `MvpSystem.dll` to => /SCP Secret Laboratory/LabApi/plugins/global/
 - Move `dependencies.zip` to => /SCP Secret Laboratory/LabApi/dependencies/global/

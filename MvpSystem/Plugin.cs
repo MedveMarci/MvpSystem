@@ -18,7 +18,7 @@ public class MvpSystem : Plugin<Config>
     public override string Name => "MvpSystem";
     public override string Description => "A plugin to track and reward MVP players each round.";
     public override string Author => "MedveMarci";
-    public override Version Version { get; } = new(1, 1, 2);
+    public override Version Version { get; } = new(1, 1, 3);
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
     internal static MvpSystem Singleton { get; private set; }
 
