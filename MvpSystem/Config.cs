@@ -16,6 +16,13 @@ public class Config
         { "steamid2", "name.ogg" }
     };
 
+    [Description("Volume of the MVP music. 100 = normal, lower is quieter, higher amplifies (can distort above 100).")]
+    public float MusicVolume { get; set; } = 100f;
+
+    [Description(
+        "Point weights used to decide who deserves to be MVP. The player with the highest total score becomes the MVP.")]
+    public MvpScoring Scoring { get; set; } = new();
+
     [Description("If the StatsSystem plugin is present, it will count it if this is true")]
     public bool StatsSystemIntegration { get; set; } = true;
 
@@ -182,4 +189,38 @@ public class Config
         { AchievementName.ChangeInCommand, "Change in Command" },
         { AchievementName.BePoliteBeEfficient, "Be Polite. Be Efficient." }
     };
+}
+
+public class MvpScoring
+{
+    [Description(
+        "Minimum score a player must reach to be eligible for the MVP title. If nobody reaches it, no MVP is announced so the title is never given to someone who did nothing.")]
+    public float MinimumScore { get; set; } = 5f;
+
+    [Description("Points awarded for each kill made as a human.")]
+    public float PerHumanKill { get; set; } = 2f;
+
+    [Description("Points awarded for each kill made as an SCP.")]
+    public float PerScpKill { get; set; } = 2f;
+
+    [Description("Points awarded for each SCP the player killed (killing an SCP is high impact).")]
+    public float PerScpKilled { get; set; } = 8f;
+
+    [Description("Points awarded per point of damage dealt.")]
+    public float PerDamage { get; set; } = 0.02f;
+
+    [Description("Points awarded for successfully escaping the facility.")]
+    public float Escape { get; set; } = 4f;
+
+    [Description("Extra points for the player who escaped first (fastest).")]
+    public float FirstEscapeBonus { get; set; } = 4f;
+
+    [Description("Extra points for the player who killed an SCP first (fastest).")]
+    public float FirstScpKillBonus { get; set; } = 4f;
+
+    [Description("Base points awarded for earning any tracked achievement.")]
+    public float AchievementBase { get; set; } = 3f;
+
+    [Description("Additional points per achievement priority rank (higher priority achievements are worth more).")]
+    public float AchievementPriorityBonus { get; set; } = 0.3f;
 }

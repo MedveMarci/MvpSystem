@@ -29,16 +29,23 @@ public static class EventHandler
     private static readonly Dictionary<int, Stats> PlayerStats = new();
     private static readonly Stopwatch Stopwatch = new();
     private static readonly Dictionary<string, string> ClipPaths = new();
-    
+
     internal static void OnPlayerJoined(PlayerJoinedEventArgs ev)
     {
-        if (PlayerStats.ContainsKey(ev.Player.PlayerId))
-            PlayerStats[ev.Player.PlayerId] = new Stats(ev.Player);
-        else
-            PlayerStats.Add(ev.Player.PlayerId, new Stats(ev.Player));
+        if (ev.Player.IsDummy) return;
+        PlayerStats[ev.Player.PlayerId] = new Stats(ev.Player);
 
         var result = PreviousStats.FirstOrDefault(p => p.Value.UserId == ev.Player.UserId);
         result.Value?.Name = ev.Player.Nickname;
+    }
+    
+    private static Stats GetStats(Player player)
+    {
+        if (player == null || player.IsDummy) return null;
+        if (PlayerStats.TryGetValue(player.PlayerId, out var stats)) return stats;
+        stats = new Stats(player);
+        PlayerStats[player.PlayerId] = stats;
+        return stats;
     }
 
     internal static void OnWaitingForPlayers()
@@ -50,7 +57,6 @@ public static class EventHandler
     internal static void OnRoundStart()
     {
         Stopwatch.Restart();
-        if (MvpSystem.Singleton.Config == null) return;
         var musicDir = Path.Combine(PathManager.Configs.FullName, "MvpMusic");
         foreach (var config in MvpSystem.Singleton.Config.MvpMusic)
         {
@@ -69,7 +75,9 @@ public static class EventHandler
     {
         if (ev.Attacker == null) return;
         if (ev.DamageHandler is not AttackerDamageHandler damageHandler) return;
-        var stats = PlayerStats[ev.Attacker.PlayerId];
+        if (ev.Attacker.Faction == ev.Player.Faction) return;
+        var stats = GetStats(ev.Attacker);
+        if (stats == null) return;
         stats.TotalDamage += damageHandler.TotalDamageDealt;
     }
 
@@ -82,9 +90,9 @@ public static class EventHandler
             foreach (var p in Player.ReadyList)
                 if (p.Role == RoleTypeId.Scp106)
                     scp106 = p;
-            if (scp106 != null)
+            var stats = GetStats(scp106);
+            if (stats != null)
             {
-                var stats = PlayerStats[scp106.PlayerId];
                 stats.KillsAsScp++;
                 if (stats.ScpRole == RoleTypeId.None)
                     stats.ScpRole = RoleTypeId.Scp106;
@@ -92,14 +100,15 @@ public static class EventHandler
         }
 
         if (ev.Attacker == null || ev.Attacker.IsDummy) return;
-        
-        var playerStat = PlayerStats[ev.Attacker.PlayerId];
+
+        var playerStat = GetStats(ev.Attacker);
+        if (playerStat == null) return;
         if (ev.Player.Team == Team.SCPs && ev.Player.Role != RoleTypeId.Scp0492)
         {
-                playerStat.ScpsKilled.Add(ev.Player.Role);
+            playerStat.ScpsKilled.Add(ev.Player.Role);
 
-                if (playerStat.ScpKilledTime < 0)
-                    playerStat.ScpKilledTime = (float)NetworkTime.time;
+            if (playerStat.ScpKilledTime < 0)
+                playerStat.ScpKilledTime = (float)NetworkTime.time;
         }
 
         if (ev.Attacker.Team != Team.SCPs &&
@@ -110,20 +119,23 @@ public static class EventHandler
     internal static void OnPlayerDeath(PlayerDeathEventArgs ev)
     {
         if (ev.Attacker == null) return;
-        var stats = PlayerStats[ev.Attacker.PlayerId];
         if (ev.Attacker.Team != Team.SCPs) return;
+        if (ev.Player.Team == Team.SCPs) return;
+        var stats = GetStats(ev.Attacker);
+        if (stats == null) return;
         stats.KillsAsScp++;
         if (stats.ScpRole == RoleTypeId.None)
             stats.ScpRole = ev.Attacker.Role;
     }
 
-    internal static void OnPlayerEscaping(PlayerEscapingEventArgs ev)
+    internal static void OnPlayerEscaped(PlayerEscapedEventArgs ev)
     {
-        if (!ev.IsAllowed)
+        if (ev.EscapeScenarioType == Escape.EscapeScenarioType.None)
             return;
-        var stats = PlayerStats[ev.Player.PlayerId];
+        var stats = GetStats(ev.Player);
+        if (stats == null) return;
         stats.EscapeTime = (float)Stopwatch.Elapsed.TotalSeconds;
-        stats.EscapeRole = ev.Player.Role;
+        stats.EscapeRole = ev.OldRole;
     }
 
     internal static void OnRoundEnded(RoundEndedEventArgs ev)
@@ -197,17 +209,20 @@ public static class EventHandler
                 $"Stats aggregation finished. topKillsAsScp={topKillsAsScp?.Name ?? "<none>"}, topScpsKilled={topScpsKilled?.Name ?? "<none>"}, topScpKilledTime={topScpKilledTime?.Name ?? "<none>"}, topTotalKills={topTotalKills?.Name ?? "<none>"}, topEscapeTime={topEscapeTime?.Name ?? "<none>"}, topAchievement={topAchievement?.Name ?? "<none>"}, topTotalDamageDealt={topTotalDamageDealt?.Name ?? "<none>"}");
 
             var bc = MvpSystem.Singleton.Config.Start;
-            var mvp = new[]
-                {
-                    topScpsKilled, topTotalKills, topKillsAsScp, topTotalDamageDealt, topEscapeTime, topAchievement,
-                    topScpKilledTime
-                }
-                .Where(s => s != null)
-                .GroupBy(s => s)
-                .OrderByDescending(g => g.Count())
-                .FirstOrDefault()?.Key;
 
-            LogManager.Debug($"MVP selection result: {(mvp != null ? mvp.Name + " (" + mvp.UserId + ")" : "<none>")}");
+            var scoring = MvpSystem.Singleton.Config.Scoring;
+            Stats mvp = null;
+            foreach (var s in PlayerStats.Values)
+            {
+                s.MvpScore = ComputeScore(s, scoring, topEscapeTime, topScpKilledTime);
+                LogManager.Debug($"MVP score for {s.Name} ({s.UserId}): {s.MvpScore}");
+                if (s.MvpScore < scoring.MinimumScore) continue;
+                if (mvp == null || s.MvpScore > mvp.MvpScore)
+                    mvp = s;
+            }
+
+            LogManager.Debug(
+                $"MVP selection result: {(mvp != null ? mvp.Name + " (" + mvp.UserId + ") score=" + mvp.MvpScore : "<none>")}");
 
             if (mvp != null)
             {
@@ -236,19 +251,23 @@ public static class EventHandler
                 }
 
                 var mvpText = MvpSystem.Singleton.Config.MvpTitle.Replace("{name}", mvp.Name);
-                var clipKey = mvp.UserId + "-" + (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out var value) ? value : null);
+                var clipKey = mvp.UserId + "-" +
+                              (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out var value)
+                                  ? value
+                                  : null);
                 if (MvpSystem.Singleton.Config.MvpMusic.ContainsKey(mvp.UserId) &&
                     ClipPaths.TryGetValue(clipKey, out var clipPath))
                 {
                     LogManager.Debug(
                         $"MVP has configured music: {MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]} for user {mvp.UserId}");
 
-                    var settings = new SpeakerSettings { IsSpatial = false, MaxDistance = 5000f, Volume = 1f };
+                    var settings = new SpeakerSettings
+                        { IsSpatial = false, MaxDistance = 5000f, Volume = MvpSystem.Singleton.Config.MusicVolume / 100f };
                     AudioPlayerPool.Rent(settings)
                         .WithFilteredSendEngine(p =>
                             ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(p.ReferenceHub, 300)
                                 ?.SyncIsA ?? false)
-                        .UseFile(clipPath, false)
+                        .UseFile(clipPath)
                         .DestroyOnEnd()
                         .PoolOnEnd();
 
@@ -285,8 +304,7 @@ public static class EventHandler
                 else if (!string.IsNullOrEmpty(MvpSystem.Singleton.Config.MostScpsKilled))
                 {
                     var roles = topScpsKilled.ScpsKilled.Select(scp =>
-                            MvpSystem.Singleton.Config?.MostScpsKilledListItem.Replace("{scp}",
-                                scp == RoleTypeId.Tutorial ? "<color=#FF96DE>Serpent's Hand</color>" : scp.ToString()))
+                            MvpSystem.Singleton.Config.MostScpsKilledListItem.Replace("{scp}", scp.ToString()))
                         .ToList();
                     bc += MvpSystem.Singleton.Config.MostScpsKilled.Replace("{name}", topScpsKilled.Name)
                         .Replace("{scps}", string.Join(", ", roles)) + "\n";
@@ -332,7 +350,6 @@ public static class EventHandler
                 p.SendBroadcast(bc, MvpSystem.Singleton.Config.Duration, shouldClearPrevious: true);
             }
 
-            //command events
             PreviousStats.Clear();
             LogManager.Debug("PreviousStats cleared");
             if (topKillsAsScp != null)
@@ -387,15 +404,41 @@ public static class EventHandler
         }
     }
 
+    private static float ComputeScore(Stats s, MvpScoring w, Stats firstEscape, Stats firstScpKill)
+    {
+        var score = 0f;
+        score += s.TotalKills * w.PerHumanKill;
+        score += s.KillsAsScp * w.PerScpKill;
+        score += s.ScpsKilled.Count * w.PerScpKilled;
+        score += s.TotalDamage * w.PerDamage;
+
+        if (s.EscapeTime > 0)
+            score += w.Escape;
+
+        if (s.Achievement != null)
+        {
+            score += w.AchievementBase;
+            var idx = MvpSystem.Singleton.Config.Achievements.IndexOf(s.Achievement.Value);
+            if (idx >= 0)
+                score += (MvpSystem.Singleton.Config.Achievements.Count - idx) * w.AchievementPriorityBonus;
+        }
+
+        if (ReferenceEquals(s, firstEscape))
+            score += w.FirstEscapeBonus;
+        if (ReferenceEquals(s, firstScpKill))
+            score += w.FirstScpKillBonus;
+
+        return score;
+    }
+
     public static void OnPlayerAchieve(Player player, AchievementName achievement)
     {
-        if (MvpSystem.Singleton.Config != null &&
-            !MvpSystem.Singleton.Config.Achievements.Contains(achievement)) return;
-        var stats = PlayerStats[player.PlayerId];
-        if (MvpSystem.Singleton.Config != null && (stats.Achievement == null ||
-                                                   MvpSystem.Singleton.Config.Achievements.IndexOf(stats.Achievement
-                                                       .Value) >
-                                                   MvpSystem.Singleton.Config.Achievements.IndexOf(achievement)))
+        if (!MvpSystem.Singleton.Config.Achievements.Contains(achievement))
+            return;
+        var stats = GetStats(player);
+        if (stats == null) return;
+        if (stats.Achievement == null || 
+            MvpSystem.Singleton.Config.Achievements.IndexOf(stats.Achievement.Value) > MvpSystem.Singleton.Config.Achievements.IndexOf(achievement))
             stats.Achievement = achievement;
     }
 
@@ -409,9 +452,10 @@ public static class EventHandler
         public readonly List<RoleTypeId> ScpsKilled = [];
         public readonly string UserId = player.UserId;
         public AchievementName? Achievement;
-        public RoleTypeId EscapeRole;
+        public RoleTypeId EscapeRole = RoleTypeId.None;
         public float EscapeTime = -1;
         public int KillsAsScp;
+        public float MvpScore;
         public string Name = player.Nickname;
         public float ScpKilledTime = -1;
         public RoleTypeId ScpRole = RoleTypeId.None;
