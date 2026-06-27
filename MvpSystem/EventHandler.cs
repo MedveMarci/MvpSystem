@@ -50,7 +50,7 @@ public static class EventHandler
 
     internal static void OnWaitingForPlayers()
     {
-        ApiManager.CheckForUpdates();
+        VersionManager.CheckForUpdates();
         PlayerStats.Clear();
     }
 
