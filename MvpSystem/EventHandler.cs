@@ -38,7 +38,7 @@ public static class EventHandler
         var result = PreviousStats.FirstOrDefault(p => p.Value.UserId == ev.Player.UserId);
         result.Value?.Name = ev.Player.Nickname;
     }
-    
+
     private static Stats GetStats(Player player)
     {
         if (player == null || player.IsDummy) return null;
@@ -262,7 +262,9 @@ public static class EventHandler
                         $"MVP has configured music: {MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]} for user {mvp.UserId}");
 
                     var settings = new SpeakerSettings
-                        { IsSpatial = false, MaxDistance = 5000f, Volume = MvpSystem.Singleton.Config.MusicVolume / 100f };
+                    {
+                        IsSpatial = false, MaxDistance = 5000f, Volume = MvpSystem.Singleton.Config.MusicVolume / 100f
+                    };
                     AudioPlayerPool.Rent(settings)
                         .WithFilteredSendEngine(p =>
                             ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(p.ReferenceHub, 300)
@@ -437,8 +439,9 @@ public static class EventHandler
             return;
         var stats = GetStats(player);
         if (stats == null) return;
-        if (stats.Achievement == null || 
-            MvpSystem.Singleton.Config.Achievements.IndexOf(stats.Achievement.Value) > MvpSystem.Singleton.Config.Achievements.IndexOf(achievement))
+        if (stats.Achievement == null ||
+            MvpSystem.Singleton.Config.Achievements.IndexOf(stats.Achievement.Value) >
+            MvpSystem.Singleton.Config.Achievements.IndexOf(achievement))
             stats.Achievement = achievement;
     }
 

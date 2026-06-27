@@ -7,9 +7,9 @@
 - **Score-based MVP selection** (`Scoring` config section). The MVP is now the
   player with the highest score earned from what they actually did during the
   round, with fully configurable point weights:
-  - `MinimumScore`, `PerHumanKill`, `PerScpKill`, `PerScpKilled`, `PerDamage`,
-    `Escape`, `FirstEscapeBonus`, `FirstScpKillBonus`, `AchievementBase`,
-    `AchievementPriorityBonus`.
+    - `MinimumScore`, `PerHumanKill`, `PerScpKill`, `PerScpKilled`, `PerDamage`,
+      `Escape`, `FirstEscapeBonus`, `FirstScpKillBonus`, `AchievementBase`,
+      `AchievementPriorityBonus`.
 
 ### Changed
 
@@ -40,5 +40,7 @@
 - Initial release.
 
 [1.2.0]: https://github.com/MedveMarci/MvpSystem/releases/tag/1.2.0
+
 [1.1.0]: https://github.com/MedveMarci/MvpSystem/releases/tag/1.1.0
+
 [1.0.0]: https://github.com/MedveMarci/MvpSystem/releases/tag/1.0.0
