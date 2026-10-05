@@ -15,11 +15,17 @@ public class MvpSystem : Plugin<Config>
 {
     private readonly Harmony _harmony = new("MedveMarci.MVP");
     public string githubRepo = "MedveMarci/MvpSystem";
+
     public override string Name => "MvpSystem";
+
     public override string Description => "A plugin to track and reward MVP players each round.";
+
     public override string Author => "MedveMarci";
-    public override Version Version { get; } = new(1, 2, 0);
+
+    public override Version Version { get; } = new(1, 2, 1);
+
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
+
     internal static MvpSystem Singleton { get; private set; }
 
     public override void Enable()
@@ -38,16 +44,18 @@ public class MvpSystem : Plugin<Config>
             new SSTwoButtonsSetting(300, "MVP Music", "On", "Off", false, "You can enable or disable MVP music sound.")
         ];
 
-        if (ServerSpecificSettingsSync.DefinedSettings == null ||
-            ServerSpecificSettingsSync.DefinedSettings.Length == 0)
+        if (ServerSpecificSettingsSync.DefinedSettings == null || ServerSpecificSettingsSync.DefinedSettings.Length == 0)
         {
             ServerSpecificSettingsSync.DefinedSettings = setting;
         }
         else
         {
-            var newSettings = new List<ServerSpecificSettingBase>(ServerSpecificSettingsSync.DefinedSettings);
-            newSettings.AddRange(setting);
-            ServerSpecificSettingsSync.DefinedSettings = newSettings.ToArray();
+            List<ServerSpecificSettingBase> newSettings =
+            [
+                .. ServerSpecificSettingsSync.DefinedSettings,
+                .. setting
+            ];
+            ServerSpecificSettingsSync.DefinedSettings = [.. newSettings];
         }
 
         ServerSpecificSettingsSync.SendToAll();
