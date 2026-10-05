@@ -8,8 +8,7 @@ public class Config
 {
     [Description("Enable debug logs")] public bool Debug { get; set; } = false;
 
-    [Description(
-        "MVP music to be played with steamid as key and music file name as value, make sure the files are in Mvp/Music folder")]
+    [Description("MVP music to be played with steamid as key and music file name as value, make sure the files are in Mvp/Music folder")]
     public Dictionary<string, string> MvpMusic { get; set; } = new()
     {
         { "steamid", "name.ogg" },
@@ -19,8 +18,7 @@ public class Config
     [Description("Volume of the MVP music. 100 = normal, lower is quieter, higher amplifies (can distort above 100).")]
     public float MusicVolume { get; set; } = 100f;
 
-    [Description(
-        "Point weights used to decide who deserves to be MVP. The player with the highest total score becomes the MVP.")]
+    [Description("Point weights used to decide who deserves to be MVP. The player with the highest total score becomes the MVP.")]
     public MvpScoring Scoring { get; set; } = new();
 
     [Description("If the StatsSystem plugin is present, it will count it if this is true")]
@@ -36,34 +34,27 @@ public class Config
     public string MvpTitle { get; set; } = "<color=#78e2ff><b>{name}</b></color> is the MVP!";
 
     [Description("Format used for each stat, if set to no text/empty the stat will not be displayed")]
-    public string MostKillsAsScp { get; set; } =
-        "<color=#78e2ff><b>{name}</b></color> had the most kills as <color=#ff0000><b>{role}</b></color> with <color=#45ff7a><b>{kills}</b></color> kills";
+    public string MostKillsAsScp { get; set; } = "<color=#78e2ff><b>{name}</b></color> had the most kills as <color=#ff0000><b>{role}</b></color> with <color=#45ff7a><b>{kills}</b></color> kills";
 
-    public string FirstToKillScp { get; set; } =
-        "<color=#78e2ff><b>{name}</b></color> was the first to kill a <color=#ff0000><b>SCP</b></color>";
+    public string FirstToKillScp { get; set; } = "<color=#78e2ff><b>{name}</b></color> was the first to kill a <color=#ff0000><b>SCP</b></color>";
 
     [Description("Replaces first_to_kill_scp if player has more than one kill")]
     public string MostScpsKilled { get; set; } = "<color=#78e2ff><b>{name}</b></color> killed {scps}";
 
     public string MostScpsKilledListItem { get; set; } = "<color=#ff0000><b>{scp}</b></color>";
 
-    public string MostKillsAsHuman { get; set; } =
-        "<color=#78e2ff><b>{name}</b></color> had the most kills as a human with <color=#45ff7a><b>{kills}</b></color> kills";
+    public string MostKillsAsHuman { get; set; } = "<color=#78e2ff><b>{name}</b></color> had the most kills as a human with <color=#45ff7a><b>{kills}</b></color> kills";
 
-    public string FirstToEscape { get; set; } =
-        "<color=#78e2ff><b>{name}</b></color> was the first to escape in <color=#45ff7a><b>{time}</b></color> as a <b>{role}</b>";
+    public string FirstToEscape { get; set; } = "<color=#78e2ff><b>{name}</b></color> was the first to escape in <color=#45ff7a><b>{time}</b></color> as a <b>{role}</b>";
 
-    public string BestAchievement { get; set; } =
-        "<color=#78e2ff><b>{name}</b></color> achieved <color=#45ff7a><b>{achievement}</b></color> - {description}";
+    public string BestAchievement { get; set; } = "<color=#78e2ff><b>{name}</b></color> achieved <color=#45ff7a><b>{achievement}</b></color> - {description}";
 
-    public string MostDamageDealt { get; set; } =
-        "<color=#78e2ff><b>{name}</b></color> dealt the most damage with <color=#45ff7a><b>{damage}</b></color> damage";
+    public string MostDamageDealt { get; set; } = "<color=#78e2ff><b>{name}</b></color> dealt the most damage with <color=#45ff7a><b>{damage}</b></color> damage";
 
     [Description("Close out tags from the Start and display text you want to appear at the bottom")]
     public string End { get; set; } = "</line-height></size>";
 
-    [Description(
-        "Achievements to be tracked during the round. Order of achievements determine priority, ones closer to the top override lower ones. contains all valid achievements by default(christmas, halloween and They Are Just Resources... are missing due to techinal reasons)")]
+    [Description("Achievements to be tracked during the round. Order of achievements determine priority, ones closer to the top override lower ones. contains all valid achievements by default(christmas, halloween and They Are Just Resources... are missing due to techinal reasons)")]
     public List<AchievementName> Achievements { get; set; } =
     [
         AchievementName.BePoliteBeEfficient,
@@ -193,8 +184,7 @@ public class Config
 
 public class MvpScoring
 {
-    [Description(
-        "Minimum score a player must reach to be eligible for the MVP title. If nobody reaches it, no MVP is announced so the title is never given to someone who did nothing.")]
+    [Description("Minimum score a player must reach to be eligible for the MVP title. If nobody reaches it, no MVP is announced so the title is never given to someone who did nothing.")]
     public float MinimumScore { get; set; } = 5f;
 
     [Description("Points awarded for each kill made as a human.")]

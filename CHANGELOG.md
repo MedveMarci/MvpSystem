@@ -1,35 +1,35 @@
+## [1.2.1]
+
+### Fixed
+
+- **`NullReferenceException` in `AchievementHandlerBasePatch`** when a player earned an achievement.
+
 ## [1.2.0]
 
 ### Added
 
-- **Configurable music volume** (`MusicVolume`). Controls the volume of the MVP
-  music clip (`100` = normal, lower is quieter, higher amplifies and may distort).
-- **Score-based MVP selection** (`Scoring` config section). The MVP is now the
-  player with the highest score earned from what they actually did during the
-  round, with fully configurable point weights:
+- **Configurable music volume** (`MusicVolume`). Controls the volume of the MVP music clip (`100` = normal, lower is
+  quieter, higher amplifies and may distort).
+- **Score-based MVP selection** (`Scoring` config section). The MVP is now the player with the highest score earned from
+  what they actually did during the round, with fully configurable point weights:
     - `MinimumScore`, `PerHumanKill`, `PerScpKill`, `PerScpKilled`, `PerDamage`,
       `Escape`, `FirstEscapeBonus`, `FirstScpKillBonus`, `AchievementBase`,
       `AchievementPriorityBonus`.
 
 ### Changed
 
-- MVP selection no longer picks the player who simply tops the most stat
-  categories (which could crown someone who did almost nothing). The title now
-  goes to the highest scorer, and is **not awarded at all** if nobody reaches
+- MVP selection no longer picks the player who simply tops the most stat categories (which could crown someone who did
+  almost nothing). The title now goes to the highest scorer, and is **not awarded at all** if nobody reaches
   `MinimumScore`.
-- Damage and SCP kills from friendly fire (same faction/team) no longer count
-  toward MVP scoring.
+- Damage and SCP kills from friendly fire (same faction/team) no longer count toward MVP scoring.
 
 ### Fixed
 
-- **Escape sometimes displayed an SCP role.** The escaped role now uses the
-  event's `OldRole` (the role the player escaped as) instead of the player's
-  live role, which could already reflect the post-escape role transition.
-- `EscapeRole` defaulted to `Scp173` (the `RoleTypeId` zero value); it now
-  defaults to `None`.
-- Several event handlers could throw `KeyNotFoundException` when stats were
-  accessed for untracked players (dummies/NPCs). Stat access is now routed
-  through a safe `GetStats` helper.
+- **Escape sometimes displayed an SCP role.** The escaped role now uses the event's `OldRole` (the role the player
+  escaped as) instead of the player's live role, which could already reflect the post-escape role transition.
+- `EscapeRole` defaulted to `Scp173` (the `RoleTypeId` zero value); it now defaults to `None`.
+- Several event handlers could throw `KeyNotFoundException` when stats were accessed for untracked players
+  (dummies/NPCs). Stat access is now routed through a safe `GetStats` helper.
 
 ## [1.1.0]
 

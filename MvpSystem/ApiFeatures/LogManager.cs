@@ -6,6 +6,7 @@ namespace MvpSystem.ApiFeatures;
 internal static class LogManager
 {
     private static bool DebugEnabled => MvpSystem.Singleton?.Config.Debug ?? false;
+
     private static string PluginName => MvpSystem.Singleton?.Name ?? "MvpSystem";
 
     public static void Debug(string message)
