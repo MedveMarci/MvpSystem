@@ -1,3 +1,11 @@
+## [1.3.0]
+
+### Added
+
+- **Discord round summary** (`Discord` config section). If `WebhookUrl` is set, the end of round summary shown in-game
+  is also posted to Discord as an embed. Rich text is converted to Discord markdown (bold/italic/underline/strikethrough
+  are kept, colors and sizes are dropped), player names are escaped and mentions are disabled.
+
 ## [1.2.1]
 
 ### Fixed

@@ -14,7 +14,6 @@ namespace MvpSystem;
 public class MvpSystem : Plugin<Config>
 {
     private readonly Harmony _harmony = new("MedveMarci.MVP");
-    public string githubRepo = "MedveMarci/MvpSystem";
 
     public override string Name => "MvpSystem";
 
@@ -22,7 +21,7 @@ public class MvpSystem : Plugin<Config>
 
     public override string Author => "MedveMarci";
 
-    public override Version Version { get; } = new(1, 2, 1);
+    public override Version Version { get; } = new(1, 3, 0);
 
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
 

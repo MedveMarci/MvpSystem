@@ -24,6 +24,9 @@ public class Config
     [Description("If the StatsSystem plugin is present, it will count it if this is true")]
     public bool StatsSystemIntegration { get; set; } = true;
 
+    [Description("Sends the end of round summary to a Discord channel through a webhook.")]
+    public DiscordSettings Discord { get; set; } = new();
+
     [Description("Duration of broadcast, might need to be increased if round end time set in config is longer")]
     public ushort Duration { get; set; } = 30;
 
@@ -213,4 +216,19 @@ public class MvpScoring
 
     [Description("Additional points per achievement priority rank (higher priority achievements are worth more).")]
     public float AchievementPriorityBonus { get; set; } = 0.3f;
+}
+
+public class DiscordSettings
+{
+    [Description("Discord webhook URL. Leave empty to disable sending the round summary to Discord.")]
+    public string WebhookUrl { get; set; } = "";
+
+    [Description("Name shown as the sender of the message. Leave empty to use the webhook's own name.")]
+    public string Username { get; set; } = "MVP System";
+
+    [Description("Title of the embed.")]
+    public string EmbedTitle { get; set; } = "Round summary";
+
+    [Description("Color of the embed as a hex code.")]
+    public string EmbedColor { get; set; } = "#78e2ff";
 }
