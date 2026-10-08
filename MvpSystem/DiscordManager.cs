@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MvpSystem.ApiFeatures;
@@ -46,7 +47,7 @@ internal static class DiscordManager
                     timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
                 }
             }
-        }, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
+        }, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 
         string url = settings.WebhookUrl;
         Task.Run(async () =>

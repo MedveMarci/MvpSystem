@@ -8,18 +8,12 @@ using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Features.Wrappers;
-using LabApi.Loader;
 using LabApi.Loader.Features.Paths;
 using Mirror;
 using MvpSystem.ApiFeatures;
 using PlayerRoles;
 using PlayerStatsSystem;
-using SecretLabNAudio.Core;
-using SecretLabNAudio.Core.Extensions;
-using SecretLabNAudio.Core.Pools;
-using StatsSystem.Extensions;
 using UnityEngine;
-using UserSettings.ServerSpecific;
 
 namespace MvpSystem;
 
@@ -28,7 +22,6 @@ public static class EventHandler
     private static readonly Dictionary<Stat, Stats> PreviousStats = new();
     private static readonly Dictionary<int, Stats> PlayerStats = new();
     private static readonly Stopwatch Stopwatch = new();
-    private static readonly Dictionary<string, string> ClipPaths = new();
 
     internal static void OnPlayerJoined(PlayerJoinedEventArgs ev)
     {
@@ -57,18 +50,6 @@ public static class EventHandler
     internal static void OnRoundStart()
     {
         Stopwatch.Restart();
-        string musicDir = Path.Combine(PathManager.Configs.FullName, "MvpMusic");
-        foreach (KeyValuePair<string, string> config in MvpSystem.Singleton.Config.MvpMusic)
-        {
-            string filePath = Path.Combine(musicDir, config.Value);
-            if (File.Exists(filePath))
-                ClipPaths[config.Key + "-" + config.Value] = filePath;
-        }
-    }
-
-    internal static void OnRoundRestarted()
-    {
-        ClipPaths.Clear();
     }
 
     internal static void OnPlayerHurt(PlayerHurtEventArgs ev)
@@ -216,42 +197,28 @@ public static class EventHandler
 
             if (mvp != null)
             {
-                if (MvpSystem.Singleton.Config.StatsSystemIntegration)
-                {
-                    Player mvpPlayer = Player.Get(mvp.UserId);
-                    if (mvpPlayer != null)
-                    {
-                        LogManager.Debug($"Incrementing MVP count for player {mvp.Name} ({mvp.UserId}) via StatsSystem");
-                        if (PluginLoader.EnabledPlugins.Any(plugin => plugin.Name == "StatsSystem"))
-                        {
-                            IncrementStat(mvpPlayer);
-                            LogManager.Debug("MVP count incremented successfully.");
-                        }
-                        else
-                        {
-                            LogManager.Warn("StatsSystem plugin not found in enabled plugins. Cannot increment MVP count.");
-                        }
-                    }
-                    else
-                    {
-                        LogManager.Debug($"MVP player object not found for userId {mvp.UserId}");
-                    }
-                }
+                StatsSystem.TryIncrease(mvp.UserId);
 
                 string mvpText = MvpSystem.Singleton.Config.MvpTitle.Replace("{name}", mvp.Name);
-                string clipKey = mvp.UserId + "-" + (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out string value) ? value : null);
-                if (MvpSystem.Singleton.Config.MvpMusic.ContainsKey(mvp.UserId) && ClipPaths.TryGetValue(clipKey, out string clipPath))
+                if (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out string musicFile) && !string.IsNullOrEmpty(musicFile))
                 {
-                    LogManager.Debug($"MVP has configured music: {MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]} for user {mvp.UserId}");
+                    string clipPath = Path.Combine(PathManager.Configs.FullName, "MvpMusic", musicFile);
+                    LogManager.Debug($"MVP has configured music: {musicFile} for user {mvp.UserId}");
 
-                    SpeakerSettings settings = new()
+                    if (!File.Exists(clipPath))
                     {
-                        IsSpatial = false, MaxDistance = 5000f, Volume = MvpSystem.Singleton.Config.MusicVolume / 100f
-                    };
-                    AudioPlayerPool.Rent(settings).WithFilteredSendEngine(p => ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(p.ReferenceHub, 300)?.SyncIsA ?? false).UseFile(clipPath).DestroyOnEnd().PoolOnEnd();
-
-                    LogManager.Debug($"Playing MVP audio: {clipKey}");
-                    mvpText += $"\nZene neve: <b>{MvpSystem.Singleton.Config.MvpMusic[mvp.UserId].Replace(".ogg", "")}</b>";
+                        LogManager.Warn($"MVP music file '{clipPath}' configured for {mvp.UserId} does not exist.");
+                    }
+                    else if (MusicPlayer.TryPlay(clipPath, MvpSystem.Singleton.Config.MusicVolume / 100f))
+                    {
+                        LogManager.Debug($"Playing MVP audio: {clipPath}");
+                        if (!string.IsNullOrEmpty(MvpSystem.Singleton.Config.MusicName))
+                            mvpText += "\n" + MvpSystem.Singleton.Config.MusicName.Replace("{music}", Path.GetFileNameWithoutExtension(musicFile));
+                    }
+                    else if (!MusicPlayer.IsAvailable)
+                    {
+                        LogManager.Warn("SecretLabNAudio is not installed, MVP music cannot be played.");
+                    }
                 }
 
                 summary += mvpText + "\n";
@@ -394,11 +361,6 @@ public static class EventHandler
         if (stats == null) return;
         if (stats.Achievement == null || achievements.IndexOf(stats.Achievement.Value) > achievements.IndexOf(achievement))
             stats.Achievement = achievement;
-    }
-
-    private static void IncrementStat(Player player)
-    {
-        player.IncrementStat("MVPs");
     }
 
     private class Stats(Player player)

@@ -10,32 +10,30 @@ the round and selects an MVP at the end of the round.
 ## Features
 
 - Fully customizable in the config.
-- You can add MVP music for specific players using [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio). If they
-  are the MVP, the music is played.
-    - Supported formats: `.ogg`, `.mp3`, `.wav`, `.aiff`
-    - Recommended: mono (1 channel), 48 kHz - other formats are converted automatically
 - The end of round summary can also be sent to a Discord channel through a webhook (`discord` section in the config).
 - Players can mute the music for themselves in the Server-specific settings.
 - Compatible with [StatsSystem](https://github.com/MedveMarci/StatsSystem/releases/latest) - if
   `StatsSystemIntegration` is `true` in the config and the plugin is present, it counts the MVPs.
+- You can add MVP music for specific players using [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio). If they
+  are the MVP, the music is played. SecretLabNAudio is optional - without it the plugin works normally, just without
+  music.
+    - Supported formats: `.ogg`, `.mp3`, `.wav`, `.aiff`
+    - Recommended: mono (1 channel), 48 kHz - other formats are converted automatically
 
 ---
 
 ## Installation
 
-1. Install [SecretLabNAudio](https://github.com/Axwabo/SecretLabNAudio/releases/latest) (v2.1.2 or newer). The
-   single-file version (`SecretLabNAudio.zip` → `bin/SecretLabNAudio.dll`) is recommended, as it already includes `.ogg`
-   and `.mp3` support. See its [README](https://github.com/Axwabo/SecretLabNAudio#installation) for details.
-2. Download `MvpSystem.dll` and `dependencies.zip` from
+1. Download `MvpSystem.dll` and `dependencies.zip` from
    the [latest release](https://github.com/MedveMarci/MvpSystem/releases/latest).
-3. Move `MvpSystem.dll` to:
+2. Move `MvpSystem.dll` to:
     - Windows: `%AppData%\SCP Secret Laboratory\LabAPI\plugins\global\`
     - Linux: `~/.config/SCP Secret Laboratory/LabAPI/plugins/global/`
-4. Extract `0Harmony.dll` from the `dependencies` folder of `dependencies.zip` to:
+3. Extract `0Harmony.dll` from the `dependencies` folder of `dependencies.zip` to:
     - Windows: `%AppData%\SCP Secret Laboratory\LabAPI\dependencies\global\`
     - Linux: `~/.config/SCP Secret Laboratory/LabAPI/dependencies/global/`
-5. Start the server once to generate the config and the music folder, then edit the config and restart.
-6. Put the MVP music files into the `MvpMusic` folder and reference them by file name in the `mvp_music` config entry:
+4. Start the server once to generate the config and the music folder, then edit the config and restart.
+5. Put the MVP music files into the `MvpMusic` folder and reference them by file name in the `mvp_music` config entry:
     - Windows: `%AppData%\SCP Secret Laboratory\LabAPI\configs\MvpMusic\`
     - Linux: `~/.config/SCP Secret Laboratory/LabAPI/configs/MvpMusic/`
 

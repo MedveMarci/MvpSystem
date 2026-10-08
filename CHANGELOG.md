@@ -2,9 +2,17 @@
 
 ### Added
 
-- **Discord round summary** (`Discord` config section). If `WebhookUrl` is set, the end of round summary shown in-game
-  is also posted to Discord as an embed. Rich text is converted to Discord markdown (bold/italic/underline/strikethrough
-  are kept, colors and sizes are dropped), player names are escaped and mentions are disabled.
+- **Discord round summary**. If `WebhookUrl` is set, the end of round summary shown in-game
+  is also posted to Discord as an embed.
+- **Translatable settings**. The header, label, button texts and hint of the MVP
+  music toggle in the Server-specific settings can now be changed.
+- **Configurable music name line**. Default value: `Music: {music}` (`{music}` is the file name without extension, empty disables the line).
+
+### Changed
+
+- **SecretLabNAudio is now optional.** Without it the plugin works normally, only MVP music is disabled and the music
+  toggle is not shown in the Server-specific settings.
+- The music name line now strips any file extension, not only `.ogg`, and is only shown if the music actually started.
 
 ## [1.2.1]
 
