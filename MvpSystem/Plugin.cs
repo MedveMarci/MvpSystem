@@ -14,7 +14,6 @@ namespace MvpSystem;
 public class MvpSystem : Plugin<Config>
 {
     private readonly Harmony _harmony = new("MedveMarci.MVP");
-    public string githubRepo = "MedveMarci/MvpSystem";
 
     public override string Name => "MvpSystem";
 
@@ -22,7 +21,7 @@ public class MvpSystem : Plugin<Config>
 
     public override string Author => "MedveMarci";
 
-    public override Version Version { get; } = new(1, 2, 1);
+    public override Version Version { get; } = new(1, 3, 0);
 
     public override Version RequiredApiVersion => new(LabApiProperties.CompiledVersion);
 
@@ -32,16 +31,47 @@ public class MvpSystem : Plugin<Config>
     {
         Singleton = this;
         _harmony.PatchAll();
+
         if (!Directory.Exists(Path.Combine(PathManager.Configs.FullName, "MvpMusic")))
         {
             LogManager.Info("MvpMusic directory does not exist. Creating...");
             Directory.CreateDirectory(Path.Combine(PathManager.Configs.FullName, "MvpMusic"));
         }
 
+        if (MusicPlayer.IsAvailable)
+            RegisterMusicSetting();
+
+        PlayerEvents.Joined += EventHandler.OnPlayerJoined;
+        ServerEvents.WaitingForPlayers += EventHandler.OnWaitingForPlayers;
+        ServerEvents.RoundStarted += EventHandler.OnRoundStart;
+        PlayerEvents.Dying += EventHandler.OnPlayerDying;
+        PlayerEvents.Death += EventHandler.OnPlayerDeath;
+        PlayerEvents.Escaped += EventHandler.OnPlayerEscaped;
+        ServerEvents.RoundEnded += EventHandler.OnRoundEnded;
+        PlayerEvents.Hurt += EventHandler.OnPlayerHurt;
+    }
+
+    public override void Disable()
+    {
+        _harmony.UnpatchAll("MedveMarci.MVP");
+        Singleton = null;
+        PlayerEvents.Joined -= EventHandler.OnPlayerJoined;
+        ServerEvents.WaitingForPlayers -= EventHandler.OnWaitingForPlayers;
+        ServerEvents.RoundStarted -= EventHandler.OnRoundStart;
+        PlayerEvents.Dying -= EventHandler.OnPlayerDying;
+        PlayerEvents.Death -= EventHandler.OnPlayerDeath;
+        PlayerEvents.Escaped -= EventHandler.OnPlayerEscaped;
+        ServerEvents.RoundEnded -= EventHandler.OnRoundEnded;
+        PlayerEvents.Hurt -= EventHandler.OnPlayerHurt;
+    }
+
+    private void RegisterMusicSetting()
+    {
+        MusicSettingTexts texts = Config.MusicSetting;
         ServerSpecificSettingBase[] setting =
         [
-            new SSGroupHeader("MvpMusic"),
-            new SSTwoButtonsSetting(300, "MVP Music", "On", "Off", false, "You can enable or disable MVP music sound.")
+            new SSGroupHeader(texts.Header),
+            new SSTwoButtonsSetting(300, texts.Label, texts.OnText, texts.OffText, false, texts.Hint)
         ];
 
         if (ServerSpecificSettingsSync.DefinedSettings == null || ServerSpecificSettingsSync.DefinedSettings.Length == 0)
@@ -59,29 +89,5 @@ public class MvpSystem : Plugin<Config>
         }
 
         ServerSpecificSettingsSync.SendToAll();
-        PlayerEvents.Joined += EventHandler.OnPlayerJoined;
-        ServerEvents.WaitingForPlayers += EventHandler.OnWaitingForPlayers;
-        ServerEvents.RoundStarted += EventHandler.OnRoundStart;
-        PlayerEvents.Dying += EventHandler.OnPlayerDying;
-        PlayerEvents.Death += EventHandler.OnPlayerDeath;
-        PlayerEvents.Escaped += EventHandler.OnPlayerEscaped;
-        ServerEvents.RoundEnded += EventHandler.OnRoundEnded;
-        ServerEvents.RoundRestarted += EventHandler.OnRoundRestarted;
-        PlayerEvents.Hurt += EventHandler.OnPlayerHurt;
-    }
-
-    public override void Disable()
-    {
-        _harmony.UnpatchAll("MedveMarci.MVP");
-        Singleton = null;
-        PlayerEvents.Joined -= EventHandler.OnPlayerJoined;
-        ServerEvents.WaitingForPlayers -= EventHandler.OnWaitingForPlayers;
-        ServerEvents.RoundStarted -= EventHandler.OnRoundStart;
-        PlayerEvents.Dying -= EventHandler.OnPlayerDying;
-        PlayerEvents.Death -= EventHandler.OnPlayerDeath;
-        PlayerEvents.Escaped -= EventHandler.OnPlayerEscaped;
-        ServerEvents.RoundEnded -= EventHandler.OnRoundEnded;
-        ServerEvents.RoundRestarted -= EventHandler.OnRoundRestarted;
-        PlayerEvents.Hurt -= EventHandler.OnPlayerHurt;
     }
 }

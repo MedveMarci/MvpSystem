@@ -6,7 +6,8 @@ namespace MvpSystem;
 
 public class Config
 {
-    [Description("Enable debug logs")] public bool Debug { get; set; } = false;
+    [Description("Enable debug logs")] 
+    public bool Debug { get; set; } = false;
 
     [Description("MVP music to be played with steamid as key and music file name as value, make sure the files are in Mvp/Music folder")]
     public Dictionary<string, string> MvpMusic { get; set; } = new()
@@ -18,11 +19,20 @@ public class Config
     [Description("Volume of the MVP music. 100 = normal, lower is quieter, higher amplifies (can distort above 100).")]
     public float MusicVolume { get; set; } = 100f;
 
+    [Description("Texts of the MVP music toggle in the Server-specific settings. Only shown if SecretLabNAudio is installed.")]
+    public MusicSettingTexts MusicSetting { get; set; } = new();
+
+    [Description("Line appended to the MVP title when their music is played. {music} is replaced with the file name without extension.")]
+    public string MusicName { get; set; } = "Music: <b>{music}</b>";
+
     [Description("Point weights used to decide who deserves to be MVP. The player with the highest total score becomes the MVP.")]
     public MvpScoring Scoring { get; set; } = new();
 
     [Description("If the StatsSystem plugin is present, it will count it if this is true")]
     public bool StatsSystemIntegration { get; set; } = true;
+
+    [Description("Sends the end of round summary to a Discord channel through a webhook.")]
+    public DiscordSettings Discord { get; set; } = new();
 
     [Description("Duration of broadcast, might need to be increased if round end time set in config is longer")]
     public ushort Duration { get; set; } = 30;
@@ -213,4 +223,37 @@ public class MvpScoring
 
     [Description("Additional points per achievement priority rank (higher priority achievements are worth more).")]
     public float AchievementPriorityBonus { get; set; } = 0.3f;
+}
+
+public class MusicSettingTexts
+{
+    [Description("Group header above the setting.")]
+    public string Header { get; set; } = "MvpMusic";
+
+    [Description("Label of the setting.")] 
+    public string Label { get; set; } = "MVP Music";
+
+    [Description("Text of the enable button.")]
+    public string OnText { get; set; } = "On";
+
+    [Description("Text of the disable button.")]
+    public string OffText { get; set; } = "Off";
+
+    [Description("Hint shown when hovering over the setting.")]
+    public string Hint { get; set; } = "You can enable or disable MVP music sound.";
+}
+
+public class DiscordSettings
+{
+    [Description("Discord webhook URL. Leave empty to disable sending the round summary to Discord.")]
+    public string WebhookUrl { get; set; } = "";
+
+    [Description("Name shown as the sender of the message. Leave empty to use the webhook's own name.")]
+    public string Username { get; set; } = "MVP System";
+
+    [Description("Title of the embed.")] 
+    public string EmbedTitle { get; set; } = "Round summary";
+
+    [Description("Color of the embed as a hex code.")]
+    public string EmbedColor { get; set; } = "#78e2ff";
 }

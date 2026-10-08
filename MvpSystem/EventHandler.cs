@@ -8,18 +8,12 @@ using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Features.Wrappers;
-using LabApi.Loader;
 using LabApi.Loader.Features.Paths;
 using Mirror;
 using MvpSystem.ApiFeatures;
 using PlayerRoles;
 using PlayerStatsSystem;
-using SecretLabNAudio.Core;
-using SecretLabNAudio.Core.Extensions;
-using SecretLabNAudio.Core.Pools;
-using StatsSystem.Extensions;
 using UnityEngine;
-using UserSettings.ServerSpecific;
 
 namespace MvpSystem;
 
@@ -28,7 +22,6 @@ public static class EventHandler
     private static readonly Dictionary<Stat, Stats> PreviousStats = new();
     private static readonly Dictionary<int, Stats> PlayerStats = new();
     private static readonly Stopwatch Stopwatch = new();
-    private static readonly Dictionary<string, string> ClipPaths = new();
 
     internal static void OnPlayerJoined(PlayerJoinedEventArgs ev)
     {
@@ -57,18 +50,6 @@ public static class EventHandler
     internal static void OnRoundStart()
     {
         Stopwatch.Restart();
-        string musicDir = Path.Combine(PathManager.Configs.FullName, "MvpMusic");
-        foreach (KeyValuePair<string, string> config in MvpSystem.Singleton.Config.MvpMusic)
-        {
-            string filePath = Path.Combine(musicDir, config.Value);
-            if (File.Exists(filePath))
-                ClipPaths[config.Key + "-" + config.Value] = filePath;
-        }
-    }
-
-    internal static void OnRoundRestarted()
-    {
-        ClipPaths.Clear();
     }
 
     internal static void OnPlayerHurt(PlayerHurtEventArgs ev)
@@ -199,7 +180,7 @@ public static class EventHandler
 
             LogManager.Debug($"Stats aggregation finished. topKillsAsScp={topKillsAsScp?.Name ?? "<none>"}, topScpsKilled={topScpsKilled?.Name ?? "<none>"}, topScpKilledTime={topScpKilledTime?.Name ?? "<none>"}, topTotalKills={topTotalKills?.Name ?? "<none>"}, topEscapeTime={topEscapeTime?.Name ?? "<none>"}, topAchievement={topAchievement?.Name ?? "<none>"}, topTotalDamageDealt={topTotalDamageDealt?.Name ?? "<none>"}");
 
-            string bc = MvpSystem.Singleton.Config.Start;
+            string summary = string.Empty;
 
             MvpScoring scoring = MvpSystem.Singleton.Config.Scoring;
             Stats mvp = null;
@@ -216,52 +197,38 @@ public static class EventHandler
 
             if (mvp != null)
             {
-                if (MvpSystem.Singleton.Config.StatsSystemIntegration)
-                {
-                    Player mvpPlayer = Player.Get(mvp.UserId);
-                    if (mvpPlayer != null)
-                    {
-                        LogManager.Debug($"Incrementing MVP count for player {mvp.Name} ({mvp.UserId}) via StatsSystem");
-                        if (PluginLoader.EnabledPlugins.Any(plugin => plugin.Name == "StatsSystem"))
-                        {
-                            IncrementStat(mvpPlayer);
-                            LogManager.Debug("MVP count incremented successfully.");
-                        }
-                        else
-                        {
-                            LogManager.Warn("StatsSystem plugin not found in enabled plugins. Cannot increment MVP count.");
-                        }
-                    }
-                    else
-                    {
-                        LogManager.Debug($"MVP player object not found for userId {mvp.UserId}");
-                    }
-                }
+                StatsSystem.TryIncrease(mvp.UserId);
 
                 string mvpText = MvpSystem.Singleton.Config.MvpTitle.Replace("{name}", mvp.Name);
-                string clipKey = mvp.UserId + "-" + (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out string value) ? value : null);
-                if (MvpSystem.Singleton.Config.MvpMusic.ContainsKey(mvp.UserId) && ClipPaths.TryGetValue(clipKey, out string clipPath))
+                if (MvpSystem.Singleton.Config.MvpMusic.TryGetValue(mvp.UserId, out string musicFile) && !string.IsNullOrEmpty(musicFile))
                 {
-                    LogManager.Debug($"MVP has configured music: {MvpSystem.Singleton.Config.MvpMusic[mvp.UserId]} for user {mvp.UserId}");
+                    string clipPath = Path.Combine(PathManager.Configs.FullName, "MvpMusic", musicFile);
+                    LogManager.Debug($"MVP has configured music: {musicFile} for user {mvp.UserId}");
 
-                    SpeakerSettings settings = new()
+                    if (!File.Exists(clipPath))
                     {
-                        IsSpatial = false, MaxDistance = 5000f, Volume = MvpSystem.Singleton.Config.MusicVolume / 100f
-                    };
-                    AudioPlayerPool.Rent(settings).WithFilteredSendEngine(p => ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(p.ReferenceHub, 300)?.SyncIsA ?? false).UseFile(clipPath).DestroyOnEnd().PoolOnEnd();
-
-                    LogManager.Debug($"Playing MVP audio: {clipKey}");
-                    mvpText += $"\nZene neve: <b>{MvpSystem.Singleton.Config.MvpMusic[mvp.UserId].Replace(".ogg", "")}</b>";
+                        LogManager.Warn($"MVP music file '{clipPath}' configured for {mvp.UserId} does not exist.");
+                    }
+                    else if (MusicPlayer.TryPlay(clipPath, MvpSystem.Singleton.Config.MusicVolume / 100f))
+                    {
+                        LogManager.Debug($"Playing MVP audio: {clipPath}");
+                        if (!string.IsNullOrEmpty(MvpSystem.Singleton.Config.MusicName))
+                            mvpText += "\n" + MvpSystem.Singleton.Config.MusicName.Replace("{music}", Path.GetFileNameWithoutExtension(musicFile));
+                    }
+                    else if (!MusicPlayer.IsAvailable)
+                    {
+                        LogManager.Warn("SecretLabNAudio is not installed, MVP music cannot be played.");
+                    }
                 }
 
-                bc += mvpText + "\n";
+                summary += mvpText + "\n";
                 LogManager.Debug($"MVP text appended to broadcast: {mvpText}");
             }
 
             if (topKillsAsScp != null && !string.IsNullOrEmpty(MvpSystem.Singleton.Config.MostKillsAsScp))
             {
                 string line = MvpSystem.Singleton.Config.MostKillsAsScp.Replace("{name}", topKillsAsScp.Name).Replace("{role}", topKillsAsScp.ScpRole == RoleTypeId.Tutorial ? "<color=#FF96DE>Serpent's Hand</color>" : topKillsAsScp.ScpRole.ToString()).Replace("{kills}", topKillsAsScp.KillsAsScp.ToString()) + "\n";
-                bc += line;
+                summary += line;
                 LogManager.Debug($"Appended MostKillsAsScp line: {line}");
             }
 
@@ -269,30 +236,30 @@ public static class EventHandler
             {
                 if ((topScpsKilled.ScpsKilled.Count == 1 || string.IsNullOrEmpty(MvpSystem.Singleton.Config.MostScpsKilled)) && topScpKilledTime != null && !string.IsNullOrEmpty(MvpSystem.Singleton.Config.FirstToKillScp))
                 {
-                    bc += MvpSystem.Singleton.Config.FirstToKillScp.Replace("{name}", topScpKilledTime.Name) + "\n";
+                    summary += MvpSystem.Singleton.Config.FirstToKillScp.Replace("{name}", topScpKilledTime.Name) + "\n";
                 }
                 else if (!string.IsNullOrEmpty(MvpSystem.Singleton.Config.MostScpsKilled))
                 {
                     List<string> roles = [.. topScpsKilled.ScpsKilled.Select(scp => MvpSystem.Singleton.Config.MostScpsKilledListItem.Replace("{scp}", scp.ToString()))];
-                    bc += MvpSystem.Singleton.Config.MostScpsKilled.Replace("{name}", topScpsKilled.Name).Replace("{scps}", string.Join(", ", roles)) + "\n";
+                    summary += MvpSystem.Singleton.Config.MostScpsKilled.Replace("{name}", topScpsKilled.Name).Replace("{scps}", string.Join(", ", roles)) + "\n";
                 }
             }
 
             if (topTotalKills != null && !string.IsNullOrEmpty(MvpSystem.Singleton.Config.MostKillsAsHuman))
-                bc += MvpSystem.Singleton.Config.MostKillsAsHuman.Replace("{name}", topTotalKills.Name).Replace("{kills}", topTotalKills.TotalKills.ToString()) + "\n";
+                summary += MvpSystem.Singleton.Config.MostKillsAsHuman.Replace("{name}", topTotalKills.Name).Replace("{kills}", topTotalKills.TotalKills.ToString()) + "\n";
 
             if (topTotalDamageDealt != null && !string.IsNullOrEmpty(MvpSystem.Singleton.Config.MostDamageDealt))
-                bc += MvpSystem.Singleton.Config.MostDamageDealt.Replace("{name}", topTotalDamageDealt.Name).Replace("{damage}", Mathf.RoundToInt(topTotalDamageDealt.TotalDamage).ToString()) + "\n";
+                summary += MvpSystem.Singleton.Config.MostDamageDealt.Replace("{name}", topTotalDamageDealt.Name).Replace("{damage}", Mathf.RoundToInt(topTotalDamageDealt.TotalDamage).ToString()) + "\n";
 
             if (topEscapeTime != null && !string.IsNullOrEmpty(MvpSystem.Singleton.Config.FirstToEscape))
             {
                 TimeSpan ts = new(0, 0, Mathf.RoundToInt(topEscapeTime.EscapeTime));
-                bc += MvpSystem.Singleton.Config.FirstToEscape.Replace("{name}", topEscapeTime.Name).Replace("{time}", ts.Minutes + ":" + ts.Seconds.ToString("D2")).Replace("{role}", (topEscapeTime.EscapeRole == RoleTypeId.ClassD ? "<color=#ff731c>" : "<color=#fff287>") + topEscapeTime.EscapeRole + "</color>") + "\n";
+                summary += MvpSystem.Singleton.Config.FirstToEscape.Replace("{name}", topEscapeTime.Name).Replace("{time}", ts.Minutes + ":" + ts.Seconds.ToString("D2")).Replace("{role}", (topEscapeTime.EscapeRole == RoleTypeId.ClassD ? "<color=#ff731c>" : "<color=#fff287>") + topEscapeTime.EscapeRole + "</color>") + "\n";
             }
 
             if (topAchievement != null && !string.IsNullOrEmpty(MvpSystem.Singleton.Config.BestAchievement))
-                bc += MvpSystem.Singleton.Config.BestAchievement.Replace("{name}", topAchievement.Name).Replace("{achievement}", MvpSystem.Singleton.Config.AchievementNames.TryGetValue(topAchievement.Achievement.Value, out string name) ? name : $"<color=#FF0000>ERROR ACHIEVEMENT NAME TRANSLATION MISSING FOR {topAchievement.Achievement.Value}</color>").Replace("{description}", MvpSystem.Singleton.Config.AchievementDescriptions.TryGetValue(topAchievement.Achievement.Value, out string description) ? description : $"<color=#FF0000>ERROR ACHIEVEMENT DESCRIPTION TRANSLATION MISSING FOR {topAchievement.Achievement.Value}</color>");
-            bc += MvpSystem.Singleton.Config.End;
+                summary += MvpSystem.Singleton.Config.BestAchievement.Replace("{name}", topAchievement.Name).Replace("{achievement}", MvpSystem.Singleton.Config.AchievementNames.TryGetValue(topAchievement.Achievement.Value, out string name) ? name : $"<color=#FF0000>ERROR ACHIEVEMENT NAME TRANSLATION MISSING FOR {topAchievement.Achievement.Value}</color>").Replace("{description}", MvpSystem.Singleton.Config.AchievementDescriptions.TryGetValue(topAchievement.Achievement.Value, out string description) ? description : $"<color=#FF0000>ERROR ACHIEVEMENT DESCRIPTION TRANSLATION MISSING FOR {topAchievement.Achievement.Value}</color>");
+            string bc = MvpSystem.Singleton.Config.Start + summary + MvpSystem.Singleton.Config.End;
             LogManager.Debug($"Final broadcast length: {bc.Length}");
             string preview = bc.Length > 200 ? bc.Substring(0, 200) + "..." : bc;
             LogManager.Debug($"Broadcast preview: {preview}");
@@ -301,6 +268,8 @@ public static class EventHandler
                 LogManager.Debug($"Sending broadcast to player {p.Nickname} ({p.UserId})");
                 p.SendBroadcast(bc, MvpSystem.Singleton.Config.Duration, shouldClearPrevious: true);
             }
+
+            DiscordManager.SendRoundSummary(summary);
 
             PreviousStats.Clear();
             LogManager.Debug("PreviousStats cleared");
@@ -392,11 +361,6 @@ public static class EventHandler
         if (stats == null) return;
         if (stats.Achievement == null || achievements.IndexOf(stats.Achievement.Value) > achievements.IndexOf(achievement))
             stats.Achievement = achievement;
-    }
-
-    private static void IncrementStat(Player player)
-    {
-        player.IncrementStat("MVPs");
     }
 
     private class Stats(Player player)
